@@ -1,68 +1,134 @@
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+header {
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0 !important;
 }
-a:hover {
-  color: #535bf2;
+
+main {
+  flex: 1;
+  padding: 20px;
+}
+
+footer {
+  background-color: #333;
+  color: #fff;
+  padding: 10px;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* Button */
+
+.btn-default {
+  background-color: white;
+  color: black !important;
+  filter: drop-shadow(0 0 1px black);
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.btn-default:hover {
+  background-color: rgb(216, 216, 216);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.btn-primary {
+  background-color: #027b83;
+  color: white !important;
+  filter: drop-shadow(0 0 1px black);
+}
+
+.btn-primary:hover {
+  background-color: #006970 !important;
+}
+
+.btn-danger {
+  background-color: #e11428;
+  color: white !important;
+  filter: drop-shadow(0 0 1px black);
+}
+
+.btn-danger:hover {
+  background-color: #cb1124;
+}
+
+/* Label */
+
+.label-default {
+  color: #01959f;
+  border: 1px solid #01959f !important;
+  background: #f7feff;
+}
+
+.label-warning {
+  color: #fa9810;
+  background: #fffcf5;
+  border: 1px solid #feeabc;
+}
+
+.label-danger {
+  color: #e11428;
+  background: #fffafa;
+  border: 1px solid #f5b1b7;
+}
+
+.label-success {
+  color: #43936c;
+  background: #f8fbf9;
+  border: 1px solid #b8dbca;
+}
+
+/* Task */
+
+.task-default {
+  background: #f7feff;
+  border: 1px solid #01959f !important;
+}
+
+.task-warning {
+  background: #fffcf5;
+  border: 1px solid #feeabc;
+}
+
+.task-danger {
+  background: #fffafa;
+  border: 1px solid #f5b1b7;
+}
+
+.task-success {
+  background: #f8fbf9;
+  border: 1px solid #b8dbca;
+}
+
+.task-padding {
+  padding: 16px 8px;
+}
+
+/* Card */
+
+/* Progress Bar */
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background-color: #ccc;
+  border-radius: 5px;
+  margin: auto;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  background-color: #007bff;
+  width: 0;
+  transition: width 0.3s ease-in-out;
 }
