@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Outlet, Navigate, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { PlusOutlined } from "@ant-design/icons";
 import { Modal, Input, Alert } from "antd";
 import { createTodo } from "../services/todos";
@@ -25,8 +25,6 @@ const Layout = () => {
         localStorage.setItem("authToken", token);
         setIsLogin(true);
         setAlertMessage("Login successful!");
-
-        // Redirect to /home after successful login
         navigate("/home");
       } else {
         setAlertMessage("Wrong email or password!");

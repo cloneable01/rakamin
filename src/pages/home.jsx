@@ -43,14 +43,36 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const fetchInitialItemsForTodo = async () => {
+      try {
+        const newTodos = await Promise.all(
+          todos.map(async (todo, index) => {
+            const items = await fetchItem(index + 1);
+            return { ...todo, items };
+          })
+        );
+        setTodos(newTodos);
+      } catch (error) {
+        console.error("Failed to fetch initial items:", error.message);
+      }
+    };
+
+    if (todos.length > 0) {
+      fetchInitialItemsForTodo();
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchItemsForTodo = async (index) => {
       try {
-        const items = await fetchItem(index + 1);
-        setTodos((prevTodos) =>
-          prevTodos.map((todo, todoIndex) =>
-            todoIndex === index ? { ...todo, items } : todo
-          )
-        );
+        if (!todos[index].items) {
+          const items = await fetchItem(index + 1);
+          setTodos((prevTodos) =>
+            prevTodos.map((todo, todoIndex) =>
+              todoIndex === index ? { ...todo, items } : todo
+            )
+          );
+        }
       } catch (error) {
         console.error(
           `Failed to fetch items for todo at index ${index}:`,
@@ -59,11 +81,10 @@ export default function Home() {
       }
     };
 
-    // Fetch items for each task once when the component mounts
     todos.forEach((_, index) => {
       fetchItemsForTodo(index);
     });
-  }, []);
+  }, [todos]);
 
   if (!isLoggedIn) {
     return <Navigate to="/login" />;
