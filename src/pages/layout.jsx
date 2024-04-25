@@ -85,7 +85,7 @@ const Layout = () => {
       <header className="flex justify-between">
         <div className="flex">
           <div className="mr-4 my-auto">
-            <h1 className="text-xl">Product Roadmap</h1>
+            <h1 className="text-xl">Product Roadmap 1</h1>
           </div>
           {isLogin && (
             <Button type="primary" onClick={handleAddGroup}>
@@ -97,7 +97,7 @@ const Layout = () => {
           <div className="flex">
             <input
               placeholder="email"
-              type="text"
+              type="email"
               onChange={(e) => setEmail(e.target.value)}
               className="border py-1 px-2 rounded mr-2"
             />
