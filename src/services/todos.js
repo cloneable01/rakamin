@@ -1,6 +1,6 @@
 import axios from "axios";
 
-// const RAKAMIN_TODO_URL = import.meta.env.VITE_RAKAMIN_TODO
+const RAKAMIN_TODO_URL = import.meta.env.VITE_RAKAMIN_TODO
 
 export const fetchTodos = async () => {
   const token = localStorage.getItem("authToken");
@@ -9,8 +9,7 @@ export const fetchTodos = async () => {
     throw new Error("Authentication token not found.");
   }
 
-  // const url = RAKAMIN_TODO_URL;
-  const url = "https://todo-api-18-140-52-65.rakamin.com/todos";
+  const url = RAKAMIN_TODO_URL;
 
   try {
     const response = await axios.get(url, {
@@ -32,8 +31,7 @@ export const createTodo = async (title, description) => {
     throw new Error("Authentication token not found.");
   }
 
-  // const url = RAKAMIN_TODO_URL;
-  const url = "https://todo-api-18-140-52-65.rakamin.com/todos";
+  const url = RAKAMIN_TODO_URL;
 
   try {
     const response = await axios.post(url, {
@@ -58,8 +56,7 @@ export const fetchItem = async (i) => {
     throw new Error("Authentication token not found.");
   }
 
-  // const url = RAKAMIN_TODO_URL;
-  const url = "https://todo-api-18-140-52-65.rakamin.com/todos";
+  const url = RAKAMIN_TODO_URL;
 
   try {
     const response = await axios.get(`${url}/${i}/items`, {
