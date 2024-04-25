@@ -1,7 +1,7 @@
-// apiHelper.js
 import axios from "axios";
 
-const RAKAMIN_TODO_URL = import.meta.env.VITE_RAKAMIN_TODO
+// const RAKAMIN_TODO_URL = import.meta.env.VITE_RAKAMIN_TODO
+const RAKAMIN_TODO_URL = "https://todo-api-18-140-52-65.rakamin.com/todos";
 
 export const fetchTodos = async () => {
   const token = localStorage.getItem("authToken");
