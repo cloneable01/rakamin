@@ -188,6 +188,9 @@ export default function Home() {
           />
         </div>
       </Modal>
+      <div className=" bg-black text-white fixed right-4 bottom-4 px-2 rounded">
+        <button onClick={() => fetchData()}>Refetch</button>
+      </div>
     </div>
   );
 }
