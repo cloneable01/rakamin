@@ -33,7 +33,7 @@ const Task = ({ type, className, children, ...rest }) => {
 };
 
 Task.propTypes = {
-  type: PropTypes.oneOf(["default", "primary", "secondary"]),
+  type: PropTypes.oneOf(["default", "primary", "secondary", "warning"]),
   className: PropTypes.string,
   children: PropTypes.node,
 };

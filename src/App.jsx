@@ -3,7 +3,6 @@ import { AuthProvider } from "./pages/auth";
 import Layout from "./pages/layout";
 import Home from "./pages/home";
 import Login from "./pages/login";
-import "./App.css";
 
 function App() {
   return (
@@ -12,7 +11,6 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
-            <Route path="/home" element={<Home />} />
             <Route path="/login" element={<Login />} />
           </Route>
         </Routes>

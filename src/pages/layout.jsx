@@ -25,7 +25,7 @@ const Layout = () => {
         localStorage.setItem("authToken", token);
         setIsLogin(true);
         setAlertMessage("Login successful!");
-        navigate("/home");
+        navigate("/");
       } else {
         setAlertMessage("Wrong email or password!");
       }
@@ -85,7 +85,7 @@ const Layout = () => {
       <header className="flex justify-between">
         <div className="flex">
           <div className="mr-4 my-auto">
-            <h1 className="text-xl">Product Roadmap 1</h1>
+            <h1 className="text-xl">Product Roadmap</h1>
           </div>
           {isLogin && (
             <Button type="primary" onClick={handleAddGroup}>

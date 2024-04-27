@@ -1,14 +1,34 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { CheckCircleFilled, PlusCircleOutlined } from "@ant-design/icons";
-import { Modal, Input, InputNumber } from "antd";
+import {
+  Modal,
+  Input,
+  InputNumber,
+  Select,
+  Menu,
+  Dropdown,
+  Popconfirm,
+} from "antd";
 import Task from "../components/Task";
 import Label from "../components/Label";
 import setting from "../assets/setting.png";
-import { fetchTodos, fetchItem } from "../services/todos";
+import {
+  fetchTodos,
+  fetchItem,
+  createItem,
+  deleteItem,
+} from "../services/todos";
 
 export default function Home() {
   const [todos, setTodos] = useState([]);
+  const [tasks, setTasks] = useState({});
+  const [isEdit, setIsEdit] = useState(false);
+  const [taskId, setTaskId] = useState(null);
+  const [todoIndex, setTodoIndex] = useState(0);
+  // const [newTodoNameList, setNewTodoNameList] = useState([]);
+  const [newTaskName, setNewTaskName] = useState("");
+  const [newTaskPercentage, setNewTaskPercentage] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(
     !!localStorage.getItem("authToken")
@@ -17,8 +37,16 @@ export default function Home() {
 
   const fetchData = async () => {
     try {
-      const data = await fetchTodos();
-      setTodos(data);
+      const todosData = await fetchTodos();
+      setTodos(todosData);
+
+      const tasksData = {};
+      for (let i = 0; i < todosData.length; i++) {
+        const todoId = Number([i]) + 1;
+        const taskItem = await fetchItem(todoId);
+        tasksData[todoId] = taskItem;
+      }
+      setTasks(tasksData);
     } catch (error) {
       console.error("Failed to fetch todos:", error.message);
     }
@@ -42,49 +70,61 @@ export default function Home() {
     };
   }, []);
 
-  useEffect(() => {
-    const fetchInitialItemsForTodo = async () => {
-      try {
-        const newTodos = await Promise.all(
-          todos.map(async (todo, index) => {
-            const items = await fetchItem(index + 1);
-            return { ...todo, items };
-          })
-        );
-        setTodos(newTodos);
-      } catch (error) {
-        console.error("Failed to fetch initial items:", error.message);
-      }
-    };
-
-    if (todos.length > 0) {
-      fetchInitialItemsForTodo();
+  const handleDeleteConfirm = async (todoIndex, itemId) => {
+    try {
+      await deleteItem(todoIndex, itemId);
+      fetchData();
+      console.log("Task deleted!");
+    } catch (error) {
+      console.error("Failed to delete task:", error.message);
     }
-  }, []);
+  };
+
+  const handleCreateTask = async (index) => {
+    try {
+      const url = `${index}/items`;
+      await createItem(url, {
+        name: newTaskName,
+        progress_percentage: newTaskPercentage,
+      });
+      fetchData();
+
+      handleModalVisibility(false);
+    } catch (error) {
+      console.error("Failed to create task:", error.message);
+    }
+  };
 
   useEffect(() => {
-    const fetchItemsForTodo = async (index) => {
-      try {
-        if (!todos[index].items) {
-          const items = await fetchItem(index + 1);
-          setTodos((prevTodos) =>
-            prevTodos.map((todo, todoIndex) =>
-              todoIndex === index ? { ...todo, items } : todo
-            )
-          );
-        }
-      } catch (error) {
-        console.error(
-          `Failed to fetch items for todo at index ${index}:`,
-          error.message
-        );
-      }
-    };
+    console.log(todoIndex);
+  }, [todoIndex]);
 
-    todos.forEach((_, index) => {
-      fetchItemsForTodo(index);
-    });
-  }, [todos]);
+  const menu = (
+    <Menu>
+      <Menu.Item
+        key="edit"
+        onClick={() => {
+          setIsEdit(true);
+          handleModalVisibility(true);
+        }}
+      >
+        Edit
+      </Menu.Item>
+      <Menu.Item key="delete">
+        <Popconfirm
+          title={`Are you sure you want to delete this task?`}
+          onConfirm={() => {
+            console.log(todoIndex, taskId);
+            handleDeleteConfirm(todoIndex, taskId);
+          }}
+          okText="Yes"
+          cancelText="No"
+        >
+          <span className="text-red-500">Delete</span>
+        </Popconfirm>
+      </Menu.Item>
+    </Menu>
+  );
 
   if (!isLoggedIn) {
     return <Navigate to="/login" />;
@@ -104,13 +144,13 @@ export default function Home() {
         >
           <Label type={types[index % types.length]}>{todo.title}</Label>
           <div className="my-4">{todo.description}</div>
-          <ul>
-            {todo.items &&
-              todo.items.map((item) => (
-                <li key={item.id}>
+          {tasks[index + 1] && tasks[index + 1].length > 0 ? (
+            <ul>
+              {tasks[index + 1].map((task) => (
+                <li key={task.id}>
                   <div className="p-4 bg-[#FAFAFA] border-[#E0E0E0] rounded mb-2 border">
                     <div className="line-clamp-1 max-w-[300px] min-w-[300px]">
-                      {item.name}
+                      {task.name}
                     </div>
                     <div className="border-t border-dashed my-4" />
                     <div className="flex">
@@ -118,61 +158,92 @@ export default function Home() {
                         <div
                           className="progress-bar-fill"
                           style={{
-                            width: `${item.progress_percentage}%`,
+                            width: `${task.progress_percentage}%`,
                             backgroundColor:
-                              item.progress_percentage === 100
+                              task.progress_percentage === 100
                                 ? "#007bff"
                                 : "#01959F",
                           }}
                         ></div>
                       </div>
                       <div className="mx-4">
-                        {item.done || item.progress_percentage === 100 ? (
+                        {task.done || task.progress_percentage === 100 ? (
                           <div className="my-auto text-green-500">
                             <CheckCircleFilled />
                           </div>
                         ) : (
                           <div>
-                            {item.progress_percentage != null
-                              ? `${item.progress_percentage}%`
+                            {task.progress_percentage != null
+                              ? `${task.progress_percentage}%`
                               : "-"}
                           </div>
                         )}
                       </div>
-                      <button>
-                        <img
-                          src={setting}
-                          className="text-black"
-                          alt="setting"
-                        />
-                      </button>
-                    </div>
-                    <div>
-                      <button
-                        className="flex mt-2"
-                        onClick={() => handleModalVisibility(true)}
-                      >
-                        <div className="my-auto">
-                          <PlusCircleOutlined className="mr-2" />
-                        </div>
-                        <div className="my-auto font-light">New Task</div>
-                      </button>
+                      <Dropdown overlay={menu} arrow>
+                        <bottom
+                          onMouseEnter={() => {
+                            setTaskId(task.id);
+                            setTodoIndex(Number(index) + 1);
+                          }}
+                        >
+                          <img
+                            src={setting}
+                            className="text-black"
+                            alt="setting"
+                          />
+                        </bottom>
+                      </Dropdown>
                     </div>
                   </div>
                 </li>
               ))}
-          </ul>
+            </ul>
+          ) : (
+            <div className="p-4 bg-[#FAFAFA] border-[#E0E0E0] rounded mb-2 border text-[#757575]">
+              No tasks
+            </div>
+          )}
+          <div>
+            <button
+              className="flex mt-2"
+              onClick={() => {
+                handleModalVisibility(true);
+                setTodoIndex(Number(index) + 1);
+              }}
+            >
+              <div className="my-auto">
+                <PlusCircleOutlined className="mr-2" />
+              </div>
+              <div className="my-auto font-light">New Task</div>
+            </button>
+          </div>
         </Task>
       ))}
+
       <Modal
         title="New Task"
         visible={isModalVisible}
-        onCancel={() => handleModalVisibility(false)}
-        onOk={() => console.log("test")}
+        onCancel={() => {
+          handleModalVisibility(false);
+          setTodoIndex(0);
+          setIsEdit(false);
+          setNewTaskName("");
+          setNewTaskPercentage(0);
+        }}
+        onOk={() => {
+          handleCreateTask(todoIndex);
+          setIsEdit(false);
+          setNewTaskName("");
+          setNewTaskPercentage(0);
+        }}
       >
         <div className="mb-2">
           <span className="mb-2">Name</span>
-          <Input placeholder="Input Name" />
+          <Input
+            placeholder="Input Name"
+            value={newTaskName}
+            onChange={(e) => setNewTaskName(e.target.value)}
+          />
         </div>
         <div className="mb-2 block">
           <div>
@@ -182,15 +253,33 @@ export default function Home() {
             placeholder="Input Percentage"
             min={0}
             max={100}
+            value={newTaskPercentage}
             formatter={(value) => `${value <= 100 ? value : 100}%`}
             parser={(value) => value.replace("%", "")}
             className="w-full"
+            onChange={(value) => setNewTaskPercentage(value)}
           />
         </div>
+        {isEdit && (
+          <div className="mb-2 block">
+            <div>
+              <span className="mb-2">Move Todo</span>
+            </div>
+            <Select
+              placeholder="Select Todo"
+              className="w-full"
+              value={todoIndex}
+              onChange={(value) => setTodoIndex(value)}
+            >
+              {todos.map((todo, index) => (
+                <Select.Option key={index + 1} value={index + 1}>
+                  {todo.title}
+                </Select.Option>
+              ))}
+            </Select>
+          </div>
+        )}
       </Modal>
-      <div className=" bg-black text-white fixed right-4 bottom-4 px-2 rounded">
-        <button onClick={() => fetchData()}>Refetch</button>
-      </div>
     </div>
   );
 }

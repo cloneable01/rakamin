@@ -72,7 +72,7 @@ Button.propTypes = {
 
 Button.defaultProps = {
   type: "default",
-  shape: "default",
+  shape: "round",
   size: "default",
   className: "",
 };
