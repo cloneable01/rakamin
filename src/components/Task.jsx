@@ -24,7 +24,7 @@ const Task = ({ type, className, children, ...rest }) => {
   itemClass += ` ${className}`;
 
   return (
-    <div className="mr-4">
+    <div className="mr-4 ">
       <div className={itemClass} {...rest}>
         {children}
       </div>
@@ -33,7 +33,14 @@ const Task = ({ type, className, children, ...rest }) => {
 };
 
 Task.propTypes = {
-  type: PropTypes.oneOf(["default", "primary", "secondary", "warning"]),
+  type: PropTypes.oneOf([
+    "default",
+    "primary",
+    "secondary",
+    "warning",
+    "danger",
+    "success",
+  ]),
   className: PropTypes.string,
   children: PropTypes.node,
 };

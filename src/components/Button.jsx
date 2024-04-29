@@ -63,7 +63,7 @@ const Button = ({ type, shape, size, className, children, ...rest }) => {
 };
 
 Button.propTypes = {
-  type: PropTypes.oneOf(["primary", "secondary"]),
+  type: PropTypes.oneOf(["default", "primary", "secondary", "danger"]),
   shape: PropTypes.oneOf(["round", "circle"]),
   size: PropTypes.oneOf(["small", "default", "large"]),
   className: PropTypes.string,

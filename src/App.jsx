@@ -1,22 +1,45 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { useState } from "react";
 import { AuthProvider } from "./pages/auth";
-import Layout from "./pages/layout";
-import Home from "./pages/home";
-import Login from "./pages/login";
+import Layout from "./pages/Layout";
+import Login from "./pages/Login";
 
-function App() {
+const App = () => {
+  const [isLogin, setIsLogin] = useState(!!localStorage.getItem("authToken"));
+
+  const handleLogin = (token) => {
+    if (token) {
+      localStorage.setItem("authToken", token);
+      setIsLogin(true);
+      return <Navigate to="/home" replace />;
+    } else {
+      return null;
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    setIsLogin(false);
+    return <Navigate to="/login" replace />;
+  };
+
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <Router>
         <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="/login" element={<Login />} />
-          </Route>
+          <Route path="/" element={<Layout isLogin={isLogin} />} />
+          <Route path="/home" element={<Layout isLogin={isLogin} />} />
+          <Route path="/login" element={<Login onLogin={handleLogin} />} />
+          <Route path="/logout" element={handleLogout} />
         </Routes>
-      </BrowserRouter>
+      </Router>
     </AuthProvider>
   );
-}
+};
 
 export default App;

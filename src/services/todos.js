@@ -1,126 +1,55 @@
-import axios from "axios";
-
-const RAKAMIN_TODO_URL = import.meta.env.VITE_RAKAMIN_TODO
+import rakaminUrl from '../helper/http';
 
 export const fetchTodos = async () => {
-  const token = localStorage.getItem("authToken");
-  
-  if (!token) {
-    throw new Error("Authentication token not found.");
-  }
-
-  const url = RAKAMIN_TODO_URL;
-
   try {
-    const response = await axios.get(url, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
+    const response = await rakaminUrl.get('/');
     return response.data;
   } catch (error) {
-    throw new Error("Failed to fetch todos.");
+    console.log("Failed to fetch todos:", error);
   }
 };
 
 export const createTodo = async (title, description) => {
-  const token = localStorage.getItem("authToken");
-  
-  if (!token) {
-    throw new Error("Authentication token not found.");
-  }
-
-  const url = RAKAMIN_TODO_URL;
-
   try {
-    const response = await axios.post(url, {
-      title,
-      description
-    }, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
+    const response = await rakaminUrl.post('/', { title, description });
     return response.data;
   } catch (error) {
-    throw new Error("Failed to create todo.");
+    console.log("Failed to create todo:", error);
   }
 };
 
 export const fetchItem = async (i) => {
-  const token = localStorage.getItem("authToken");
-  
-  if (!token) {
-    throw new Error("Authentication token not found.");
-  }
-
-  const url = RAKAMIN_TODO_URL;
-
   try {
-    const response = await axios.get(`${url}/${i}/items`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }) 
-
+    const response = await rakaminUrl.get(`/${i}/items`);
     return response.data;
   } catch (error) {
-    throw new Error("Failed to fetch todos.");
+    console.log('Failed to fetch task:', error);
   }
 };
 
 export const createItem = async (url, data) => {
-  const token = localStorage.getItem("authToken");
-  
-  if (!token) {
-    throw new Error("Authentication token not found.");
-  }
-
-  const base_url = RAKAMIN_TODO_URL;
-
   try {
-    const response = await axios.post(`${base_url}/${url}`, data, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
+    const response = await rakaminUrl.post(`/${url}`, data);
     return response.data;
   } catch (error) {
-    throw new Error("Failed to create todo.");
+    console.log('Failed to create task:', error);
   }
 };
 
 export const patchItem = async (todoIndex, itemId, newData) => {
-  const base_url = RAKAMIN_TODO_URL;
   try {
-    const url = `${base_url}/todos/${todoIndex}/items/${itemId}`;
-    const response = await axios.patch(url, newData);
+    const response = await rakaminUrl.patch(`/${todoIndex}/items/${itemId}`, newData);
     return response.data;
   } catch (error) {
-    throw new Error(`Failed to patch item: ${error.message}`);
+    console.log(`Failed to patch task: ${error}`);
   }
 };
 
 export const deleteItem = async (todoIndex, itemId) => {
-  const base_url = RAKAMIN_TODO_URL;
-  const token = localStorage.getItem("authToken");
-
-  if (!token) {
-    throw new Error("Authentication token not found.");
-  }
-
   try {
-    const url = `${base_url}/${todoIndex}/items/${itemId}`;
-    const response = await axios.delete(url, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    const response = await rakaminUrl.delete(`/${todoIndex}/items/${itemId}`);
     return response.data;
   } catch (error) {
-    throw new Error(`Failed to delete item: ${error.message}`);
+    console.log(`Failed to delete task: ${error}`);
   }
 };

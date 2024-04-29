@@ -9,14 +9,15 @@ import {
   Menu,
   Dropdown,
   Popconfirm,
+  Alert,
 } from "antd";
 import Task from "../components/Task";
 import Label from "../components/Label";
-import setting from "../assets/setting.png";
 import {
   fetchTodos,
   fetchItem,
   createItem,
+  patchItem,
   deleteItem,
 } from "../services/todos";
 
@@ -26,12 +27,14 @@ export default function Home() {
   const [isEdit, setIsEdit] = useState(false);
   const [taskId, setTaskId] = useState(null);
   const [todoIndex, setTodoIndex] = useState(0);
-  // const [newTodoNameList, setNewTodoNameList] = useState([]);
+  const [targetTodos, setTargetTodos] = useState(0);
   const [newTaskName, setNewTaskName] = useState("");
   const [newTaskPercentage, setNewTaskPercentage] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState();
   const [isLoggedIn, setIsLoggedIn] = useState(
-    !!localStorage.getItem("authToken")
+    localStorage.getItem("authToken")
   );
   const types = ["default", "warning", "danger", "success"];
 
@@ -41,14 +44,17 @@ export default function Home() {
       setTodos(todosData);
 
       const tasksData = {};
-      for (let i = 0; i < todosData.length; i++) {
-        const todoId = Number([i]) + 1;
-        const taskItem = await fetchItem(todoId);
-        tasksData[todoId] = taskItem;
-      }
+      await Promise.all(
+        todosData.map(async (_, i) => {
+          const todoId = Number([i]) + 1;
+          const taskItem = await fetchItem(todoId);
+          tasksData[todoId] = taskItem;
+        })
+      );
+
       setTasks(tasksData);
     } catch (error) {
-      console.error("Failed to fetch todos:", error.message);
+      console.error("Failed to fetch todos 1:", error.message);
     }
   };
 
@@ -73,33 +79,103 @@ export default function Home() {
   const handleDeleteConfirm = async (todoIndex, itemId) => {
     try {
       await deleteItem(todoIndex, itemId);
+      setAlertMessage("Task deleted!");
+      setAlertType("success");
       fetchData();
-      console.log("Task deleted!");
     } catch (error) {
-      console.error("Failed to delete task:", error.message);
+      setAlertType("error");
+      setAlertMessage("Failed to delete task: " + error.message);
     }
   };
 
-  const handleCreateTask = async (index) => {
-    try {
-      const url = `${index}/items`;
-      await createItem(url, {
-        name: newTaskName,
-        progress_percentage: newTaskPercentage,
-      });
-      fetchData();
-
-      handleModalVisibility(false);
-    } catch (error) {
-      console.error("Failed to create task:", error.message);
+  const handleCreateTask = async (index, id) => {
+    if (!isEdit) {
+      try {
+        const url = `${index}/items`;
+        await createItem(url, {
+          name: newTaskName,
+          progress_percentage: newTaskPercentage,
+        });
+        setAlertMessage("Task created!");
+        setAlertType("success");
+        fetchData();
+        handleModalVisibility(false);
+      } catch (error) {
+        setAlertType("error");
+        setAlertMessage("Failed to create task: " + error.message);
+      }
+    } else {
+      try {
+        const url = `${index}`;
+        await patchItem(url, id, {
+          target_todo_id: targetTodos,
+          name: newTaskName,
+          progress_percentage: newTaskPercentage,
+        });
+        setAlertMessage("Task updated!");
+        setAlertType("success");
+        fetchData();
+        handleModalVisibility(false);
+      } catch (error) {
+        setAlertType("error");
+        setAlertMessage("Failed to update task: " + error.message);
+      }
     }
   };
 
-  useEffect(() => {
-    console.log(todoIndex);
-  }, [todoIndex]);
+  const handleDragStart = (e, taskId, sourceTodoIndex, sourceTaskIndex) => {
+    e.dataTransfer.setData("taskId", taskId);
+    e.dataTransfer.setData("sourceTodoIndex", sourceTodoIndex);
+    e.dataTransfer.setData("sourceTaskIndex", sourceTaskIndex);
+  };
 
-  const menu = (
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, destinationTodoIndex, destinationTaskIndex) => {
+    e.preventDefault();
+
+    const taskId = e.dataTransfer.getData("taskId");
+    const sourceTodoIndex = parseInt(
+      e.dataTransfer.getData("sourceTodoIndex"),
+      10
+    );
+    const sourceTaskIndex = parseInt(
+      e.dataTransfer.getData("sourceTaskIndex"),
+      10
+    );
+
+    if (
+      sourceTodoIndex !== destinationTodoIndex ||
+      sourceTaskIndex !== destinationTaskIndex
+    ) {
+      const sourceTasks = [...tasks[sourceTodoIndex]];
+      const [draggedTask] = sourceTasks.splice(sourceTaskIndex, 1);
+      const destinationTasks = [...tasks[destinationTodoIndex]];
+      destinationTasks.splice(destinationTaskIndex, 0, draggedTask);
+
+      const updatedTasks = { ...tasks };
+      updatedTasks[sourceTodoIndex] = sourceTasks;
+      updatedTasks[destinationTodoIndex] = destinationTasks;
+      setTasks(updatedTasks);
+      const newTargetTodoId = destinationTodoIndex;
+      patchItem(sourceTodoIndex, taskId, {
+        target_todo_id: newTargetTodoId,
+      })
+        .then(() => {
+          setAlertMessage("Task updated!");
+          setAlertType("success");
+          fetchData();
+        })
+        .catch((error) => {
+          setAlertType("error");
+          setAlertMessage("Failed to update task: " + error.message);
+        });
+    }
+  };
+
+  const menuItems = (
     <Menu>
       <Menu.Item
         key="edit"
@@ -114,7 +190,6 @@ export default function Home() {
         <Popconfirm
           title={`Are you sure you want to delete this task?`}
           onConfirm={() => {
-            console.log(todoIndex, taskId);
             handleDeleteConfirm(todoIndex, taskId);
           }}
           okText="Yes"
@@ -138,16 +213,25 @@ export default function Home() {
     <div className="flex overflow-x-scroll">
       {todos.map((todo, index) => (
         <Task
+          draggable
           key={todo.id}
           type={types[index % types.length]}
-          className="w-[350px] min-w-[350px] mr-4 mb-12"
+          className="w-[350px] min-w-[350px] mx-4 mb-12"
+          onDrop={(e) => handleDrop(e, index + 1, tasks[index + 1].length)}
+          onDragOver={(e) => handleDragOver(e)}
         >
           <Label type={types[index % types.length]}>{todo.title}</Label>
           <div className="my-4">{todo.description}</div>
           {tasks[index + 1] && tasks[index + 1].length > 0 ? (
             <ul>
-              {tasks[index + 1].map((task) => (
-                <li key={task.id}>
+              {tasks[index + 1].map((task, taskIndex) => (
+                <li
+                  key={task.id}
+                  draggable
+                  onDragStart={(e) =>
+                    handleDragStart(e, task.id, index + 1, taskIndex)
+                  }
+                >
                   <div className="p-4 bg-[#FAFAFA] border-[#E0E0E0] rounded mb-2 border">
                     <div className="line-clamp-1 max-w-[300px] min-w-[300px]">
                       {task.name}
@@ -179,20 +263,18 @@ export default function Home() {
                           </div>
                         )}
                       </div>
-                      <Dropdown overlay={menu} arrow>
-                        <bottom
-                          onMouseEnter={() => {
-                            setTaskId(task.id);
-                            setTodoIndex(Number(index) + 1);
-                          }}
-                        >
-                          <img
-                            src={setting}
-                            className="text-black"
-                            alt="setting"
-                          />
-                        </bottom>
-                      </Dropdown>
+                      <div
+                        onMouseEnter={() => {
+                          setTaskId(task.id);
+                          setTodoIndex(Number(index) + 1);
+                          setNewTaskName(task.name);
+                          setNewTaskPercentage(task.progress_percentage);
+                        }}
+                      >
+                        <Dropdown arrow overlay={menuItems}>
+                          <button className="text-black">...</button>
+                        </Dropdown>
+                      </div>
                     </div>
                   </div>
                 </li>
@@ -220,21 +302,28 @@ export default function Home() {
         </Task>
       ))}
 
+      {alertMessage && (
+        <Alert message={alertMessage} type={alertType} showIcon />
+      )}
+
       <Modal
-        title="New Task"
-        visible={isModalVisible}
+        title={`${isEdit ? "Edit" : "Create new"} task`}
+        open={isModalVisible}
         onCancel={() => {
           handleModalVisibility(false);
           setTodoIndex(0);
           setIsEdit(false);
           setNewTaskName("");
           setNewTaskPercentage(0);
+          setTargetTodos(0);
         }}
         onOk={() => {
-          handleCreateTask(todoIndex);
+          handleModalVisibility(false);
+          handleCreateTask(todoIndex, taskId);
           setIsEdit(false);
           setNewTaskName("");
           setNewTaskPercentage(0);
+          setTargetTodos(0);
         }}
       >
         <div className="mb-2">
@@ -254,7 +343,7 @@ export default function Home() {
             min={0}
             max={100}
             value={newTaskPercentage}
-            formatter={(value) => `${value <= 100 ? value : 100}%`}
+            formatter={(value) => `${value <= 100 ? value : 100}`}
             parser={(value) => value.replace("%", "")}
             className="w-full"
             onChange={(value) => setNewTaskPercentage(value)}
@@ -269,7 +358,7 @@ export default function Home() {
               placeholder="Select Todo"
               className="w-full"
               value={todoIndex}
-              onChange={(value) => setTodoIndex(value)}
+              onChange={(value) => setTargetTodos(value)}
             >
               {todos.map((todo, index) => (
                 <Select.Option key={index + 1} value={index + 1}>

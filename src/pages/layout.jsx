@@ -1,36 +1,19 @@
 import { useState, useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { useRoutes } from "react-router-dom";
 import { PlusOutlined } from "@ant-design/icons";
 import { Modal, Input, Alert } from "antd";
 import { createTodo } from "../services/todos";
 import Button from "../components/Button";
-import login from "../services/login";
+import Home from "./home";
+import Login from "./Login";
 
 const Layout = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("");
-  // const [alertClass, setAlertClass] = useState("");
-  const [isLogin, setIsLogin] = useState(!!localStorage.getItem("authToken"));
+  let isLogin = !!localStorage.getItem("authToken");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-
-  const navigate = useNavigate();
-
-  const handleLogin = () => {
-    login(email, password).then((token) => {
-      if (token) {
-        localStorage.setItem("authToken", token);
-        setIsLogin(true);
-        setAlertMessage("Login successful!");
-        navigate("/");
-      } else {
-        setAlertMessage("Wrong email or password!");
-      }
-    });
-  };
 
   const handleAddGroup = () => {
     setIsModalVisible(true);
@@ -61,7 +44,7 @@ const Layout = () => {
           setAlertType("danger");
         });
     } else {
-      setAlertMessage("Title, description, or token is missing.");
+      setAlertMessage("Title & Description is required.");
       setAlertType("warning");
     }
   };
@@ -76,13 +59,15 @@ const Layout = () => {
     }
   }, [alertMessage]);
 
-  // const closeAlert = () => {
-  //   setAlertMessage("");
-  // };
+  const routes = useRoutes([
+    { path: "/", element: <Home /> },
+    { path: "/home", element: <Home /> },
+    { path: "/login", element: <Login /> },
+  ]);
 
   return (
     <div className="layout">
-      <header className="flex justify-between">
+      <header className="flex justify-between mb-8">
         <div className="flex">
           <div className="mr-4 my-auto">
             <h1 className="text-xl">Product Roadmap</h1>
@@ -93,23 +78,6 @@ const Layout = () => {
             </Button>
           )}
         </div>
-        {!isLogin && (
-          <div className="flex">
-            <input
-              placeholder="email"
-              type="email"
-              onChange={(e) => setEmail(e.target.value)}
-              className="border py-1 px-2 rounded mr-2"
-            />
-            <input
-              placeholder="password"
-              type="password"
-              onChange={(e) => setPassword(e.target.value)}
-              className="border py-1 px-2 rounded mr-2"
-            />
-            <Button onClick={handleLogin}>Login</Button>
-          </div>
-        )}
       </header>
       {alertMessage && !isModalVisible && (
         <div className=" relative" role="alert">
@@ -122,12 +90,14 @@ const Layout = () => {
       )}
       <Modal
         title="Add New Group"
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         onOk={handleSubmit}
       >
         <div className="my-4">
-          <span className="mb-2 text-md font-bold">Title</span>
+          <span className="mb-2 text-md font-bold">
+            Title <span className="text-red-500">*</span>
+          </span>
           <Input
             placeholder="Enter Title"
             value={title}
@@ -135,7 +105,9 @@ const Layout = () => {
           />
         </div>
         <div className="my-4">
-          <span className="mb-2 text-md font-bold">Description</span>
+          <span className="mb-2 text-md font-bold">
+            Description <span className="text-red-500">*</span>
+          </span>
           <Input
             placeholder="Enter Description"
             value={description}
@@ -152,9 +124,7 @@ const Layout = () => {
           </div>
         )}
       </Modal>
-      <main>
-        <Outlet />
-      </main>
+      {routes}
     </div>
   );
 };
