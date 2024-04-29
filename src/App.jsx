@@ -6,8 +6,8 @@ import {
 } from "react-router-dom";
 import { useState } from "react";
 import { AuthProvider } from "./pages/auth";
-import Layout from "./pages/Layout";
-import Login from "./pages/Login";
+import Layout from "./pages/layout";
+import Login from "./pages/login";
 
 const App = () => {
   const [isLogin, setIsLogin] = useState(!!localStorage.getItem("authToken"));

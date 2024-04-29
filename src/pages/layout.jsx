@@ -5,7 +5,7 @@ import { Modal, Input, Alert } from "antd";
 import { createTodo } from "../services/todos";
 import Button from "../components/Button";
 import Home from "./home";
-import Login from "./Login";
+import Login from "./login";
 
 const Layout = () => {
   const [alertMessage, setAlertMessage] = useState("");
